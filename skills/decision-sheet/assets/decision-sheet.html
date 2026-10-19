@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{STEP_TITLE}} · {{PROJECT}}</title>
+<style>
+/* Neutral template. After step 7, map these variables to the project's tokens, for example
+   --bg: var(--color-surface); --card: var(--color-surface-raised); --ink: var(--color-text);
+   --ink-2: var(--color-text-secondary); --line: var(--color-line); --accent: var(--color-action);
+   and link tokens.css. Remove the dark-mode block if the project has no dark mode. */
+:root{
+  --bg:#f7f8fa; --card:#fff; --ink:#15191f; --ink-2:#555e6b; --line:#e2e5ea;
+  --accent:#2b5fb4; --rec:#1f7a4d; --rec-bg:#e3f3ea; --code-bg:#eef1f5;
+  --f:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#12161c; --card:#1a2028; --ink:#e7ebf0; --ink-2:#a3adba; --line:#2a323d;
+  --accent:#8db4f0; --rec:#7fd3a6; --rec-bg:#173326; --code-bg:#20262f; color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--f)}
+main{max-width:880px;margin:0 auto;padding:40px 16px 80px}
+.eyebrow{display:flex;flex-wrap:wrap;gap:4px 12px;font:12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.eyebrow span{white-space:nowrap}
+h1{font-size:clamp(26px,5vw,34px);line-height:1.15;margin:8px 0 12px;text-wrap:balance}
+h2{font-size:22px;margin:40px 0 12px}
+h3{font-size:17px;margin:24px 0 8px}
+code{font:14px var(--mono);background:var(--code-bg);padding:1px 5px;border-radius:4px}
+.why{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;color:var(--ink-2)}
+.ctx{font-size:14px;color:var(--ink-2);margin:0 0 6px}
+.assumption{font-size:12px;color:var(--ink-2);font-style:italic}
+
+/* Result building blocks */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:12px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.card h3{margin-top:0}
+.tablewrap{overflow-x:auto;margin:12px 0}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:15px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:12px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2)}
+pre.tree{background:var(--code-bg);border-radius:8px;padding:14px 16px;overflow-x:auto;font:13px/1.55 var(--mono)}
+blockquote{margin:12px 0;padding:10px 16px;border-left:3px solid var(--line);color:var(--ink-2)}
+/* Screenshots: mobile and desktop side by side; stacked on phones. Long pages are cut at 720px; each image links to the full file. */
+.shots{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,3fr);gap:12px;align-items:start;margin:8px 0 20px}
+.shots a{display:block;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--card)}
+.shots a{max-height:720px}
+.shots img{display:block;width:100%;height:auto}
+.shots figcaption{grid-column:1/-1;font-size:13px;color:var(--ink-2)}
+@media (max-width:600px){.shots{grid-template-columns:1fr}}
+
+/* Decisions */
+fieldset{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin:12px 0;min-width:0}
+legend{font-weight:700;padding:0 4px}
+label.opt{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer}
+label.opt input{margin-top:5px;flex:none}
+input.reason,input.answer{width:100%;font:15px var(--f);padding:8px 10px;margin-top:6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.rec{display:inline-block;font:11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--rec);background:var(--rec-bg);padding:2px 6px;border-radius:4px;margin-right:6px}
+textarea{width:100%;min-height:100px;font:15px/1.5 var(--f);padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+button{font:600 16px var(--f);background:var(--accent);color:#fff;border:0;border-radius:8px;padding:12px 20px;cursor:pointer;margin-top:16px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#out{margin-top:12px;font:13px/1.5 var(--mono);min-height:140px}
+#msg{font-size:14px;color:var(--ink-2);margin-left:12px}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow"><span>{{PROJECT}}</span><span>{{STEP_LABEL}} {{STEP_NUMBER}}</span><span>{{ROUND_LABEL}} {{ROUND}}</span><span>{{DATE}}</span></div>
+  <h1>{{STEP_TITLE}}</h1>
+  <p class="why">{{WHY_THIS_STEP}}</p>
+
+  <section>
+    <!-- RESULT: show the step's result. Building blocks: .cards > .card, .tablewrap > table, pre.tree,
+         blockquote, .assumption, and for screenshots:
+         <figure class="shots">
+           <a href="../04-structure/wireframes/r1/start.html"><img src="screens/04-start-r1-390.png" alt="Start, mobile"></a>
+           <a href="../04-structure/wireframes/r1/start.html"><img src="screens/04-start-r1-1440.png" alt="Start, desktop"></a>
+           <figcaption>Start page. Click to open the wireframe.</figcaption>
+         </figure> -->
+  </section>
+
+  <h2>{{DECISIONS_LABEL}}</h2>
+  <form id="sheet" data-title="{{PROJECT}} · {{STEP_LABEL}} {{STEP_NUMBER}} {{STEP_TITLE}} · {{ROUND_LABEL}} {{ROUND}}">
+
+    <!-- ONE QUESTION. Copy per question; use q1, q2, … as name.
+         Recommended option first, with data-rec and the badge BEFORE the text.
+         value = text that lands in the copied feedback (keep it short and self-explanatory).
+         Delete the <p class="ctx"> if there is no context. -->
+    <fieldset>
+      <legend>1. {{QUESTION}}</legend>
+      <p class="ctx">{{CONTEXT}}</p>
+      <label class="opt"><input type="radio" name="q1" value="{{OPTION_A_SHORT}}" data-rec><span><span class="rec">{{RECOMMENDED_LABEL}}</span>{{OPTION_A_TEXT}} <span class="ctx">{{WHY_RECOMMENDED}}</span></span></label>
+      <label class="opt"><input type="radio" name="q1" value="{{OPTION_B_SHORT}}"><span>{{OPTION_B_TEXT}}</span></label>
+    </fieldset>
+    <!-- END QUESTION -->
+
+    <!-- VARIANTS of a question (same fieldset, same name per question):
+         • Reason field: add <input class="reason" type="text" placeholder="Why?"> after the options.
+           Its text is appended to the answer. Use it for reference ratings (keep / partly / avoid + why).
+         • Pick several: use type="checkbox" instead of radio, e.g. word tests ("pick three words").
+           Add data-max="3" on the fieldset to say how many; no recommendation.
+         • Factual question (no right answer, e.g. "Is there a changing room?"): options without data-rec,
+           or only <input class="answer" type="text"> for a free answer. -->
+
+    <fieldset>
+      <legend>{{NOTES_LABEL}}</legend>
+      <textarea id="notes" aria-label="{{NOTES_LABEL}}"></textarea>
+    </fieldset>
+
+    <button type="button" id="copy">{{COPY_LABEL}}</button><span id="msg" aria-live="polite"></span>
+    <textarea id="out" readonly aria-label="{{COPY_LABEL}}"></textarea>
+  </form>
+</main>
+<script>
+/* All interface strings in one place. Translate to the working language. */
+var UI = {
+  feedback: 'Feedback',        // first line prefix
+  open: '(open)',              // unanswered question; the agent treats this and its translation as undecided
+  recommended: '[recommended]',// appended when the chosen option was the recommended one
+  deviation: '[deviation]',    // appended when another option was chosen
+  notes: 'Notes',
+  copied: 'Copied. Paste it into the chat.',
+  copyFailed: 'Copying is blocked here. Select the text below and copy it.'
+};
+(function(){
+  var f=document.getElementById('sheet'), out=document.getElementById('out'), msg=document.getElementById('msg');
+  function build(){
+    var lines=[UI.feedback+': '+f.dataset.title];
+    f.querySelectorAll('fieldset').forEach(function(fs){
+      var lg=fs.querySelector('legend'); if(!lg||fs.querySelector('#notes')) return;
+      var radios=fs.querySelectorAll('input[type=radio]'), boxes=fs.querySelectorAll('input[type=checkbox]');
+      var txt=fs.querySelector('input.reason,input.answer');
+      if(!radios.length&&!boxes.length&&!txt) return;
+      var ans='';
+      if(radios.length){
+        var c=fs.querySelector('input[type=radio]:checked'), hasRec=fs.querySelector('input[data-rec]');
+        if(c) ans=c.value+(c.hasAttribute('data-rec')?' '+UI.recommended:(hasRec?' '+UI.deviation:''));
+      } else if(boxes.length){
+        ans=Array.prototype.map.call(fs.querySelectorAll('input[type=checkbox]:checked'),function(b){return b.value;}).join(', ');
+      }
+      var t=txt?txt.value.trim():'';
+      if(t) ans=ans?ans+' – '+t:t;
+      lines.push(lg.textContent.trim()+': '+(ans||UI.open));
+    });
+    var n=document.getElementById('notes').value.trim();
+    if(n) lines.push(UI.notes+': '+n);
+    return lines.join('\n');
+  }
+  function refresh(){ out.value=build(); }
+  f.addEventListener('change',function(e){
+    var fs=e.target.closest('fieldset[data-max]');
+    if(fs&&e.target.type==='checkbox'&&fs.querySelectorAll('input[type=checkbox]:checked').length>+fs.dataset.max) e.target.checked=false;
+  });
+  f.addEventListener('change',refresh); f.addEventListener('input',refresh); refresh();
+  document.getElementById('copy').addEventListener('click',function(){
+    refresh();
+    if(navigator.clipboard){navigator.clipboard.writeText(out.value).then(function(){msg.textContent=UI.copied;},fail);}
+    else fail();
+    function fail(){out.focus();out.select();msg.textContent=UI.copyFailed;}
+  });
+})();
+</script>
+</body>
+</html>
